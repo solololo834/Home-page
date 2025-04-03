@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Homepage</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      background-color: #f4f4f4;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .post {
+      background-color: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .username {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .post-content img {
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .post-content h3 {
+      font-size: 20px;
+      margin-top: 10px;
+    }
+
+    .like-comment {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+
+    .comments {
+      margin-top: 20px;
+    }
+
+    .comment {
+      padding: 10px;
+      background-color: #f9f9f9;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Welcome to the Cihuuy's Homepage</h2>
+  <div id="posts-container"></div>
+
+  <!-- New Post Section -->
+  <div id="new-post">
+    <h3>Create New Post</h3>
+    <input type="text" id="new-post-title" placeholder="Enter post title" />
+    <input type="file" id="new-post-image" accept="image/*" />
+    <button id="submit-post">Post</button>
+  </div>
+</div>
+
+<script>
+  // Simulasi data pengguna yang login
+  const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+  if (!currentUser) {
+    alert("Please log in to view this page");
+    window.location.href = 'login.html'; // Ganti sesuai halaman login kamu
+  }
+
+  // Fungsi untuk membuat post
+  const posts = JSON.parse(localStorage.getItem('posts')) || [];
+
+  // Tampilkan semua post
+  function displayPosts() {
+    const postsContainer = document.getElementById('posts-container');
+    postsContainer.innerHTML = '';
+
+    posts.forEach(post => {
+      const postElement = document.createElement('div');
+      postElement.classList.add('post');
+
+      postElement.innerHTML = `
+        <div class="post-header">
+          <div class="username">${post.username}</div>
+          <button onclick="likePost(${post.id})">Like</button>
+        </div>
+        <div class="post-content">
+          <h3>${post.title}</h3>
+          <img src="${post.image}" alt="${post.title}">
+        </div>
+        <div class="like-comment">
+          <span>Likes: ${post.likes}</span>
+        </div>
+        <div class="comments">
+          ${post.comments.map(comment => `
+            <div class="comment">${comment}</div>
+          `).join('')}
+        </div>
+        <textarea id="comment-${post.id}" placeholder="Add a comment"></textarea>
+        <button onclick="addComment(${post.id})">Comment</button>
+      `;
+
+      postsContainer.appendChild(postElement);
+    });
+  }
+
+  // Fungsi untuk menambah komentar
+  function addComment(postId) {
+    const commentTextarea = document.getElementById(`comment-${postId}`);
+    const comment = commentTextarea.value.trim();
+    if (comment) {
+      const post = posts.find(p => p.id === postId);
+      post.comments.push(comment);
+      localStorage.setItem('posts', JSON.stringify(posts));
+      displayPosts();
+    }
+  }
+
+  // Fungsi untuk like post
+  function likePost(postId) {
+    const post = posts.find(p => p.id === postId);
+    post.likes += 1;
+    localStorage.setItem('posts', JSON.stringify(posts));
+    displayPosts();
+  }
+
+  // Fungsi untuk menambahkan post baru
+  document.getElementById('submit-post').addEventListener('click', function() {
+    const title = document.getElementById('new-post-title').value.trim();
+    const image = document.getElementById('new-post-image').files[0];
+
+    if (title && image) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const newPost = {
+          id: Date.now(),
+          username: currentUser.username,
+          title: title,
+          image: e.target.result,
+          likes: 0,
+          comments: []
+        };
+
+        posts.push(newPost);
+        localStorage.setItem('posts', JSON.stringify(posts));
+        displayPosts();
+        document.getElementById('new-post-title').value = '';
+        document.getElementById('new-post-image').value = '';
+      };
+
+      reader.readAsDataURL(image);
+    } else {
+      alert('Please fill out the title and select an image.');
+    }
+  });
+
+  // Tampilkan semua post ketika halaman dimuat
+  displayPosts();
+</script>
+
+</body>
+</html>
